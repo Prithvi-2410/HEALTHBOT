@@ -376,7 +376,7 @@ function appendMessage(text, sender="bot") {
 }
 
 // ================== GEMINI API ==================
-const GEMINI_API_KEY = "AIzaSyAvYoHfW5FXfS3JYtzlv5CL913GtJKcyao"
+const GEMINI_API_KEY = ""
 
 const MODEL_NAME = "gemini-2.5-flash";
 const systemInstructionText = "You are a Disease awareness bot. You will only reply to questions related to diseases.And you can also tell about medical insurance,medicine,";
@@ -451,4 +451,5 @@ try {
   askButton.disabled = false;
   loadingIndicator.style.display = "none";
 }
+
 });
