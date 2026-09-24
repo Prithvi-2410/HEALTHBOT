@@ -388,7 +388,7 @@ async function sendToGemini(message) {
   chatMessages.appendChild(typingDiv);
   chatMessages.scrollTop = chatMessages.scrollHeight;
 
-  const API_URL = "/.netlify/functions/gemini";
+  const API_URL = "/api/chat";
   const requestBody = {
     message: message,
     systemInstruction: systemInstructionText
@@ -428,7 +428,7 @@ askButton.addEventListener("click", async () => {
   const question = questionInput.value.trim();
   if(!question){ outputArea.innerHTML="Please enter a coding question."; return;}
   outputArea.innerHTML=""; loadingIndicator.style.display="block"; askButton.disabled=true;
-  const API_URL = "/.netlify/functions/gemini";
+  const API_URL = "/api/chat";
   const requestBody = {
     message: question,
     systemInstruction: "You are a Disease awareness bot. You will only reply to questions related to diseases."
