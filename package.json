@@ -18,6 +18,7 @@
   "homepage": "https://github.com/Prithvi-2410/HEALTHBOT#readme",
   "description": "",
   "dependencies": {
+    "@google/genai": "^2.24.0",
     "@google/generative-ai": "^0.24.1"
   },
   "type": "module"
