@@ -376,29 +376,46 @@ function appendMessage(text, sender="bot") {
 }
 
 // ================== GEMINI API ==================
-
-
-const MODEL_NAME = "gemini-2.5-flash";
 const systemInstructionText = "You are a Disease awareness bot. You will only reply to questions related to diseases.And you can also tell about medical insurance,medicine,";
 
 async function sendToGemini(message) {
   appendMessage(message,"user");
-  appendMessage("Typing...","bot");
-  const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL_NAME}:generateContent?key=${GEMINI_API_KEY}`;
+  
+  // Show typing indicator
+  const typingDiv = document.createElement("div");
+  typingDiv.className = "bot-message";
+  typingDiv.textContent = "Typing...";
+  chatMessages.appendChild(typingDiv);
+  chatMessages.scrollTop = chatMessages.scrollHeight;
+
+  const API_URL = "/.netlify/functions/gemini";
   const requestBody = {
-    contents:[{role:"user",parts:[{text:message}]}],
-    systemInstruction:{parts:[{text:systemInstructionText}]}
+    message: message,
+    systemInstruction: systemInstructionText
   };
+
   try {
-    const res = await fetch(API_URL,{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify(requestBody)});
+    const res = await fetch(API_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(requestBody)
+    });
+
     const data = await res.json();
-    const typingMsg = chatMessages.querySelector(".bot-message:last-child");
-    if(typingMsg && typingMsg.textContent==="Typing...") typingMsg.remove();
-    if(data.candidates?.[0]?.content?.parts?.[0]?.text){
-      appendMessage(data.candidates[0].content.parts[0].text,"bot");
-    } else appendMessage("No response from AI","bot");
-  } catch(err){
-    appendMessage("Error: "+err.message,"bot");
+    
+    // Remove typing indicator
+    typingDiv.remove();
+
+    if (data.text) {
+      appendMessage(data.text, "bot");
+    } else if (data.error) {
+      appendMessage("Error: " + data.error, "bot");
+    } else {
+      appendMessage("I'm sorry, I couldn't process that request.", "bot");
+    }
+  } catch (err) {
+    typingDiv.remove();
+    appendMessage("Error: " + err.message, "bot");
   }
 }
 
@@ -411,45 +428,35 @@ askButton.addEventListener("click", async () => {
   const question = questionInput.value.trim();
   if(!question){ outputArea.innerHTML="Please enter a coding question."; return;}
   outputArea.innerHTML=""; loadingIndicator.style.display="block"; askButton.disabled=true;
-  const API_URL = `https://generativelanguage.googleapis.com/v1beta/models/${MODEL_NAME}:generateContent?key=${GEMINI_API_KEY}`;
+  const API_URL = "/.netlify/functions/gemini";
   const requestBody = {
-  contents: [
-    {
-      role: "user",
-      parts: [{ text: question }]
-    }
-  ],
-  systemInstruction: {
-    parts: [
-      { text: "You are a Disease awareness bot. You will only reply to questions related to diseases." }
-    ]
+    message: question,
+    systemInstruction: "You are a Disease awareness bot. You will only reply to questions related to diseases."
+  };
+
+  try {
+    const res = await fetch(API_URL, {
+      method: "POST",
+      headers: { "Content-Type": "application/json" },
+      body: JSON.stringify(requestBody)
+    });
+
+    if (!res.ok) throw new Error(`API Error: ${res.status}`);
+
+    const data = await res.json();
+    const answerText = data.text || "No answer.";
+
+    outputArea.innerHTML = answerText.replace(
+      /(```[\s\S]*?```)|(`[^`]+`)/g,
+      m =>
+        m.startsWith("```")
+          ? `<pre><code>${m.replace(/```/g, '')}</code></pre>`
+          : `<code>${m.replace(/`/g, '')}</code>`
+    );
+  } catch (err) {
+    outputArea.innerHTML = "Error: " + err.message;
+  } finally {
+    askButton.disabled = false;
+    loadingIndicator.style.display = "none";
   }
-};
-
-try {
-  const res = await fetch(API_URL, {
-    method: "POST",
-    headers: { "Content-Type": "application/json" },
-    body: JSON.stringify(requestBody)
-  });
-
-  if (!res.ok) throw new Error(`API Error: ${res.status}`);
-
-  const data = await res.json();
-  const answerText = data.candidates?.[0]?.content?.parts?.[0]?.text || "No answer.";
-
-  outputArea.innerHTML = answerText.replace(
-    /(```[\s\S]*?```)|(`[^`]+`)/g,
-    m =>
-      m.startsWith("```")
-        ? `<pre><code>${m.replace(/```/g, '')}</code></pre>`
-        : `<code>${m.replace(/`/g, '')}</code>`
-  );
-} catch (err) {
-  outputArea.innerHTML = "Error: " + err.message;
-} finally {
-  askButton.disabled = false;
-  loadingIndicator.style.display = "none";
-}
-
 });
