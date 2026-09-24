@@ -1,6 +1,8 @@
-import { GoogleGenerativeAI } from "@google/generative-ai";
+import { GoogleGenAI } from "@google/genai";
 
-const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
+const ai = new GoogleGenAI({
+  apiKey: process.env.GEMINI_API_KEY
+});
 
 export default async function handler(req, res) {
   if (req.method !== "POST") {
@@ -18,24 +20,28 @@ export default async function handler(req, res) {
       });
     }
 
-    const model = genAI.getGenerativeModel({
-      model: "gemini-2.5-flash",
-      systemInstruction: systemInstruction || `
+    const interaction = await ai.interactions.create({
+      model: "gemini-3.6-flash",
+      input: message,
+      system_instruction: systemInstruction || `
         You are Zoiee, a friendly AI health awareness assistant.
+
         Provide general health information only.
+
         Do not diagnose diseases or prescribe medication.
-        Encourage users to consult a qualified healthcare professional
-        for diagnosis, treatment, emergencies, or serious symptoms.
+
+        Do not provide personalized treatment plans.
+
+        For emergencies or serious symptoms, encourage the user
+        to contact a qualified healthcare professional or emergency
+        medical service.
+
+        Answer clearly and simply.
       `
     });
 
-    const result = await model.generateContent(message);
-
-    const response = await result.response;
-    const text = response.text();
-
     return res.status(200).json({
-      text
+      text: interaction.output_text || "I couldn't generate a response."
     });
 
   } catch (error) {
