@@ -376,7 +376,7 @@ function appendMessage(text, sender="bot") {
 }
 
 // ================== GEMINI API ==================
-const GEMINI_API_KEY = ""
+
 
 const MODEL_NAME = "gemini-2.5-flash";
 const systemInstructionText = "You are a Disease awareness bot. You will only reply to questions related to diseases.And you can also tell about medical insurance,medicine,";
